@@ -538,10 +538,9 @@ app.controller('Stats', ['$scope', '$http', '$routeParams', '$timeout', '$q', '$
                 width: 0.5,
                 value: item.x,
                 label: {
-                    rotation: 0,
+                    rotation: 90,
                     align: 'right',
-                    x: -5,
-                    style: { "width": "100px" },
+                    textAlign: 'left',
                     text: item.label
                 }
             }
