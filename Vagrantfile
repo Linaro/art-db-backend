@@ -12,6 +12,10 @@ Vagrant.configure(2) do |config|
     v.customize ["modifyvm", :id, "--natdnsproxy1", "on"]
   end
 
+  config.vm.provider :libvirt do |domain|
+    domain.memory = 1024
+  end
+
   if !ENV['NOPROVISION']
     config.vm.provision "shell" do |shell|
       shell.path = 'dev-setup.sh'
