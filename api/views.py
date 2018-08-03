@@ -148,6 +148,17 @@ def get_date_range(request):
         return None
 
 
+def get_benchmark_by_fullname(fullname):
+    group = re.sub('[^/]*$', '', fullname)
+    if not group:
+        group = '/'
+    name = re.sub('.*/', '', fullname)
+    return benchmarks_models.Benchmark.objects.get(
+        name=name,
+        group__name=group
+    )
+
+
 class StatsViewSet(viewsets.ModelViewSet):
     queryset = (benchmarks_models.ResultData.objects
                 .select_related("benchmark", "result")
@@ -164,7 +175,9 @@ class StatsViewSet(viewsets.ModelViewSet):
 
         branch = self.request.query_params.get('branch')
         environment = self.request.query_params.get('environment')
-        benchmarks = self.request.query_params.getlist('benchmark')
+        benchmark_fullnames = self.request.query_params.getlist('benchmark')
+
+        benchmarks = [get_benchmark_by_fullname(b) for b in benchmark_fullnames]
 
         if not (benchmarks and branch and environment):
             return self.queryset.none()
@@ -182,7 +195,7 @@ class StatsViewSet(viewsets.ModelViewSet):
 
         queryset = self.queryset.filter(
             test_job_id__in=testjob_ids,
-            benchmark__name__in=benchmarks
+            benchmark_id__in=[b.id for b in benchmarks]
         )
 
         dates = get_date_range(self.request)
@@ -223,7 +236,9 @@ class BenchmarkGroupSummaryViewSet(viewsets.ModelViewSet):
 def dynamic_benchmark_summary(request):
     branch = request.query_params.get('branch')
     environment = request.query_params.get('environment')
-    benchmarks = request.query_params.getlist('benchmarks')
+    benchmark_fullnames = request.query_params.getlist('benchmarks')
+
+    benchmarks = [get_benchmark_by_fullname(b) for b in benchmark_fullnames]
 
     testjobs = benchmarks_models.TestJob.objects.filter(environment__identifier=environment)
     testjobs = testjobs.select_related('result')
@@ -239,11 +254,9 @@ def dynamic_benchmark_summary(request):
                 .select_related("benchmark", "result")
                 .filter(
                     test_job_id__in=testjob_ids,
-                    benchmark__name__in=benchmarks,
-
+                    benchmark_id__in=[b.id for b in benchmarks],
                 )
                 .order_by('-created_at'))
-
 
     dates = get_date_range(request)
     if dates:

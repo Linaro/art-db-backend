@@ -373,7 +373,8 @@ function slug(s) {
 }
 
 function getChartId(benchmark) {
-    return 'chart-' + slug(benchmark.name);
+    var id = slug(benchmark.full_name);
+    return 'chart-' + id;
 }
 
 app.controller('Stats', ['$scope', '$http', '$routeParams', '$timeout', '$q', '$routeParams', '$location', function($scope, $http, $routeParams, $timeout, $q, $routeParams, $location) {
@@ -444,7 +445,7 @@ app.controller('Stats', ['$scope', '$http', '$routeParams', '$timeout', '$q', '$
                          */
                         stats_endpoint = '/api/dynamic_benchmark_summary/';
                         params.benchmarks = _.map(selected, function(benchmark) {
-                            return benchmark.name;
+                            return benchmark.full_name;
                         })
                         $scope.dynamic_benchmark_summary.label = "Summary of selected benchmarks";
 
@@ -461,7 +462,7 @@ app.controller('Stats', ['$scope', '$http', '$routeParams', '$timeout', '$q', '$
                 }
                 else {
                     stats_endpoint = '/api/stats/';
-                    params.benchmark = benchmark.name;
+                    params.benchmark = benchmark.full_name;
                 }
 
                 $q.all(_.map($scope.get_environment_ids(), function(env) {
@@ -480,7 +481,7 @@ app.controller('Stats', ['$scope', '$http', '$routeParams', '$timeout', '$q', '$
                             data_by_env[0].config.params.benchmark_group;
                     }
 
-                    var benchmark = _.find($scope.benchmarks, ['name', bname]);
+                    var benchmark = _.find($scope.benchmarks, ['full_name', bname]);
                     var target_id = getChartId(benchmark);
                     var target = document.getElementById(target_id);
 
@@ -501,7 +502,7 @@ app.controller('Stats', ['$scope', '$http', '$routeParams', '$timeout', '$q', '$
         $location.search({
             branch: $scope.branch.branch_name,
             environment: $scope.get_environment_ids(),
-            benchmark: _.map($scope.benchmarks, 'name'),
+            benchmark: _.map($scope.benchmarks, 'full_name'),
             startDate: $scope.startDate && $scope.startDate.getTime() / 1000,
             endDate: $scope.endDate && $scope.endDate.getTime() / 1000,
             limit: $scope.limit
@@ -609,7 +610,7 @@ app.controller('Stats', ['$scope', '$http', '$routeParams', '$timeout', '$q', '$
                         zoomType: "xy"
                     },
                     title: {
-                        text: benchmark.label + ' on branch ' + branch.branch_name
+                        text: (benchmark.type == 'benchmark' && benchmark.full_name || benchmark.label) + ' on branch ' + branch.branch_name
                     },
                     xAxis: {
                         type: 'datetime',
@@ -706,17 +707,20 @@ app.controller('Stats', ['$scope', '$http', '$routeParams', '$timeout', '$q', '$
         var benchmarkList = [];
         $scope.dynamic_benchmark_summary = {
             name: ":summary:",
+            full_name: ":summary:",
             label: 'Summary of selected benchmarks',
             padding: '',
             type: 'dynamic_benchmark_summary'
         };
         benchmarkList.push($scope.dynamic_benchmark_summary);
-        benchmarkList.push({ name: "/", label: 'Overall summary', padding: '', type: 'root_benchmark_group' });
+        benchmarkList.push({ name: "/", full_name: "/", label: 'Overall summary', padding: '', type: 'root_benchmark_group' });
         _.each(_.groupBy(response[1].data, 'group'), function(benchmarks, group) {
-            benchmarkList.push({ name: group, label: group + ' (summary)', padding: '  ', type: 'benchmark_group' });
+            benchmarkList.push({ name: group, full_name: group, label: group + ' (summary)', padding: '  ', type: 'benchmark_group' });
             _.each(benchmarks, function(benchmark) {
                 benchmark.type = 'benchmark';
                 benchmark.label = benchmark.name;
+                benchmark.full_name = benchmark.group + benchmark.name;
+                benchmark.full_label = benchmark.full_name;
                 benchmark.padding = '    ';
                 benchmarkList.push(benchmark);
             });
@@ -767,7 +771,7 @@ app.controller('Stats', ['$scope', '$http', '$routeParams', '$timeout', '$q', '$
             return env;
         });
         $scope.benchmarks = _.map(defaults.benchmarks, function(b) {
-            return _.find($scope.benchmarkList, ['name', b])
+            return _.find($scope.benchmarkList, ['full_name', b])
         });
 
         $scope.limit = defaults.limit;
