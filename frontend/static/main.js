@@ -372,6 +372,10 @@ function slug(s) {
     return s.toLowerCase().replace(/\W+/g, '-').replace(/-$/, '');
 }
 
+function getChartId(benchmark) {
+    return 'chart-' + slug(benchmark.name);
+}
+
 app.controller('Stats', ['$scope', '$http', '$routeParams', '$timeout', '$q', '$routeParams', '$location', function($scope, $http, $routeParams, $timeout, $q, $routeParams, $location) {
 
     $scope.get_environment_ids = function() {
@@ -400,7 +404,7 @@ app.controller('Stats', ['$scope', '$http', '$routeParams', '$timeout', '$q', '$
                 }
 
                 var charts = document.getElementById('charts');
-                var this_chart_id = 'chart-' + slug(benchmark.name);
+                var this_chart_id = getChartId(benchmark);
                 var this_chart = document.getElementById(this_chart_id);
                 if (!this_chart) {
                     this_chart = document.createElement('div');
@@ -477,7 +481,7 @@ app.controller('Stats', ['$scope', '$http', '$routeParams', '$timeout', '$q', '$
                     }
 
                     var benchmark = _.find($scope.benchmarks, ['name', bname]);
-                    var target_id = 'chart-' + slug(benchmark.name);
+                    var target_id = getChartId(benchmark);
                     var target = document.getElementById(target_id);
 
                     $http.get('/api/annotations/', { params: params }).then(function(response) {
@@ -519,7 +523,8 @@ app.controller('Stats', ['$scope', '$http', '$routeParams', '$timeout', '$q', '$
     }
 
     $scope.removeBenchmark = function(benchmark) {
-        document.getElementById('chart-' + slug(benchmark.name)).remove();
+        var id = getChartId(benchmark);
+        document.getElementById(id).remove();
         _.remove($scope.benchmarks, benchmark);
         benchmark.graphed = false;
         if (benchmark.type == 'benchmark') {
