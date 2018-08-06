@@ -589,7 +589,8 @@ class StatsTest(APITestCase):
              created_at=now,
              gerrit_change_number=123)
 
-        benchmark = G(models.Benchmark, name="TheBenchmark")
+        group = G(models.BenchmarkGroup, name='foo/')
+        benchmark = G(models.Benchmark, group=group, name="TheBenchmark")
 
         G(models.ResultData,
           result=baseline,
@@ -605,13 +606,13 @@ class StatsTest(APITestCase):
 
         response = self.client.get('/api/stats/', {
             'branch': 'master',
-            'benchmark': 'TheBenchmark',
+            'benchmark': benchmark.full_name,
         })
 
         self.assertEqual(len(response.data), 0)
 
         response = self.client.get('/api/stats/', {
-            'benchmark': 'TheBenchmark',
+            'benchmark': benchmark.full_name,
             'project': 'TheProject',
         })
 
@@ -644,7 +645,7 @@ class StatsTest(APITestCase):
              created_at=now,
              gerrit_change_number=123)
 
-        benchmark = G(models.Benchmark, name="TheBenchmark")
+        benchmark = G(models.Benchmark, group__name='/', name="TheBenchmark")
         environment = G(models.Environment, identifier='myenv')
         testjob_baseline = G(models.TestJob, id=u'888888', environment=environment,result=baseline, completed=True)
         testjob_patched = G(models.TestJob, id=u'999999', environment=environment, result=patched, completed=True)
@@ -665,7 +666,7 @@ class StatsTest(APITestCase):
 
         response = self.client.get('/api/stats/', {
             'branch': 'master',
-            'benchmark': 'TheBenchmark',
+            'benchmark': benchmark.full_name,
             'project': 'TheProject',
             'environment': 'myenv',
         })
@@ -693,7 +694,7 @@ class StatsTest(APITestCase):
              created_at=now,
              gerrit_change_number=123)
 
-        benchmark = G(models.Benchmark, name="TheBenchmark")
+        benchmark = G(models.Benchmark, group__name='foo/bar/', name="TheBenchmark")
         environment = G(models.Environment, identifier='myenv')
         testjob_baseline = G(models.TestJob, id=u'888888', environment=environment,result=baseline, completed=True)
         testjob_patched = G(models.TestJob, id=u'999999', environment=environment, result=patched, completed=True)
@@ -714,7 +715,7 @@ class StatsTest(APITestCase):
 
         response = self.client.get('/api/stats/', {
             'branch': 'master',
-            'benchmark': 'TheBenchmark',
+            'benchmark': benchmark.full_name,
             'project': 'TheProject',
             'environment': 'myenv',
         })
