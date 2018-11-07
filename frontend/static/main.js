@@ -377,6 +377,22 @@ function getChartId(benchmark) {
     return 'chart-' + id;
 }
 
+
+// Workaround for issue with plotLines labels in recent browsers
+// ---------------------------------------------------------------------------
+// Drop-in fix for Highcharts issue #8477 on older Highcharts versions. The
+// issue is fixed since Highcharts v6.1.1.
+// ---------------------------------------------------------------------------
+// By TorsteinHonsi
+// https://github.com/highcharts/highcharts/issues/8477#issuecomment-424353401
+Highcharts.wrap(Highcharts.Axis.prototype, 'getPlotLinePath', function(proceed) {
+    var path = proceed.apply(this, Array.prototype.slice.call(arguments, 1));
+    if (path) {
+        path.flat = false;
+    }
+    return path;
+});
+
 app.controller('Stats', ['$scope', '$http', '$routeParams', '$timeout', '$q', '$routeParams', '$location', function($scope, $http, $routeParams, $timeout, $q, $routeParams, $location) {
 
     $scope.get_environment_ids = function() {
