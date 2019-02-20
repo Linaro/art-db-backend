@@ -30,6 +30,9 @@ supervisord_conf: "{{supervisor_dir}}/supervisord.conf"
 supervisor_config_dir: "{{supervisor_dir}}/conf.d"
 supervisor_log_dir: "{{supervisor_dir}}/log"
 
-ssl_key: /etc/ssl/private/wildcard.linaro.org.key
-ssl_cert: /etc/ssl/certs/wildcard.linaro.org.crt
-ssl_ca: /etc/ssl/certs/gd_bundle-g2-g1.pem
+use_dehydrated: true
+dehydrated: dehydrated_0.6.2-1_all.deb
+dehydrated_apache2: dehydrated-apache2_0.6.2-1_all.deb
+ssl_key: /var/lib/dehydrated/certs/{{ inventory_hostname }}/privkey.pem
+ssl_cert: /var/lib/dehydrated/certs/{{ inventory_hostname }}/cert.pem
+ssl_ca: /var/lib/dehydrated/certs/{{ inventory_hostname }}/fullchain.pem

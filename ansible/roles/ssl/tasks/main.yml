@@ -1,0 +1,64 @@
+- name: Copy dehydrated .deb
+  when: use_dehydrated
+  copy:
+    src: files/{{dehydrated}}
+    dest: /srv/{{dehydrated}}
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Copy dehydrated-apache2 .deb
+  when: use_dehydrated
+  copy:
+    src: files/{{dehydrated_apache2}}
+    dest: /srv/{{dehydrated_apache2}}
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Install moreutils
+  when: use_dehydrated
+  apt:
+    pkg: moreutils
+    state: installed
+    update-cache: yes
+
+- name: Install dehydrated
+  when: use_dehydrated
+  shell: 'dpkg -i /srv/{{dehydrated}} && touch /srv/{{dehydrated}}.installed'
+  args:
+    creates:  '/srv/{{dehydrated}}.installed'
+  register: dehydrated_package
+
+- name: Install dehydrated-apache2
+  when: use_dehydrated
+  shell: 'dpkg -i /srv/{{dehydrated_apache2}} && touch /srv/{{dehydrated_apache2}}.installed'
+  args:
+    creates:  '/srv/{{dehydrated_apache2}}.installed'
+
+- name: dehydrated domain list
+  when: use_dehydrated
+  register: dehydrated_domains
+  copy:
+    content: "{{inventory_hostname}}\n"
+    dest: /etc/dehydrated/domains.txt
+    owner: root
+    group: root
+    mode: 0644
+
+- name: register with letsencrypt
+  command: dehydrated --register --accept-terms
+  when: use_dehydrated and dehydrated_package.changed
+
+- name: call dehydrated
+  command: dehydrated --cron
+  when: use_dehydrated and (dehydrated_package.changed or dehydrated_domains.changed)
+
+- name: dehydrated crontab
+  when: use_dehydrated
+  copy:
+    content: "0 3 * * * root bash -c 'sleep $((RANDOM % 100))m' && chronic dehydrated --cron\n"
+    dest: "/etc/cron.d/dehydrated"
+    owner: root
+    group: root
+    mode: 0644

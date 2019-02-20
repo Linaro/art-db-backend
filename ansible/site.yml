@@ -8,6 +8,7 @@
 
   roles:
   - base
+  - ssl
   - postgres
   - rabbitmq
   - django
