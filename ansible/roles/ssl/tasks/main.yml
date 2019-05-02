@@ -54,10 +54,18 @@
   command: dehydrated --cron
   when: use_dehydrated and (dehydrated_package.changed or dehydrated_domains.changed)
 
+- name: dehydrated hook
+  copy:
+    src: files/dehydrated-hook
+    dest: /usr/local/bin/dehydrated-hook
+    owner: root
+    group: root
+    mode: 0755
+
 - name: dehydrated crontab
   when: use_dehydrated
   copy:
-    content: "0 3 * * * root bash -c 'sleep $((RANDOM % 100))m' && chronic dehydrated --cron\n"
+    content: "0 3 * * * root chronic dehydrated --cron --hook /usr/local/bin/dehydrated-hook\n"
     dest: "/etc/cron.d/dehydrated"
     owner: root
     group: root

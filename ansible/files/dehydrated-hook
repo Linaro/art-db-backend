@@ -1,0 +1,7 @@
+#!/bin/sh
+
+set -eu
+
+if [ "${1:-}" = 'deploy_cert' ]; then
+  service apache2 restart
+fi
